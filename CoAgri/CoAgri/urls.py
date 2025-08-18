@@ -17,13 +17,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
+from django.http import HttpResponse
 
 def redirect_to_farmlands(request):
     return redirect('farm:farmland_list')
 
+def health_check(request):
+    return HttpResponse('OK')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('farmlands/', include('farm.urls')),
+    path('health/', health_check),
     path('', redirect_to_farmlands),
-    path('', include('farm.urls')),
 ]
