@@ -1,0 +1,1 @@
+from CoAgri.wsgi import application

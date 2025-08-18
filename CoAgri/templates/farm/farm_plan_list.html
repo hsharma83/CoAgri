@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Farm Plans{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Farm Plans</h1>
+    <a href="{% url 'farm:plan_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create New Plan
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Plot</th>
+                        <th>Crop</th>
+                        <th>Start Date</th>
+                        <th>Expected Harvest</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plan in plans %}
+                    <tr>
+                        <td>{{ plan.plot }}</td>
+                        <td>{{ plan.crop }}</td>
+                        <td>{{ plan.date_of_start|date:"d M Y" }}</td>
+                        <td>{{ plan.expected_harvest_date|date:"d M Y" }}</td>
+                        <td>
+                            {% if plan.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'farm:plan_detail' plan.pk %}" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No farm plans found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

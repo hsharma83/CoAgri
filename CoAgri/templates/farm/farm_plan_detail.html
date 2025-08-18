@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}Plan Details: {{ plan.crop }} on {{ plan.plot }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Plan Details: {{ plan.crop }} on {{ plan.plot }}</h1>
+<a href="{% url 'farm:farm_finances' plan.plot.parent_farm.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-wallet2"></i> View Farm Finances
+    </a>
+
+<div class="row">
+    <!-- Summary & Budget -->
+    <div class="col-lg-6 mb-4">
+    <div class="card h-100 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Summary & Budget</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Start Date:</strong> {{ plan.date_of_start|date:"d M Y" }}</p>
+            <p><strong>Expected Harvest:</strong> {{ plan.expected_harvest_date|date:"d M Y" }}</p>
+            <hr>
+            <h5>Overall Budget Tracking</h5>
+            <p>
+                <strong>Total Budget:</strong> ${{ total_budget|floatformat:2 }}<br>
+                <strong>Total Spent:</strong> ${{ total_actual_cost|floatformat:2 }}
+            </p>
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar {% if budget_progress > 90 %}bg-danger{% elif budget_progress > 70 %}bg-warning{% else %}bg-success{% endif %}"
+                     role="progressbar" style="width: {{ budget_progress }}%;"
+                     aria-valuenow="{{ budget_progress }}">{{ budget_progress|floatformat:0 }}%
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Planned Steps -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Planned Steps</h5>
+                <!-- NEW: Button to trigger the modal -->
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStepModal">
+                    <i class="bi bi-plus-circle"></i> Add Step
+                </button>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for step in plan.steps.all|dictsort:"start_day_offset" %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ step.activity.name }}</strong><br>
+                                <small class="text-muted">
+                                    Starts: {{ step.get_start_date|date:"d M Y" }} (Day {{ step.start_day_offset }})<br>
+                                    ₹{{ step.budgeted_cost_per_acre|floatformat:2 }}/acre × {{ plan.plot.size }} acres
+                                </small>
+                            </div>
+                            <span class="badge bg-secondary rounded-pill">₹{{ step.get_total_budgeted_cost|floatformat:2 }}</span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-center">No steps have been planned yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Daily Activity Log -->
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Daily Activity Log for {{ plan.plot }}</h5>
+        <a href="{% url 'farm:activity_add' %}" class="btn btn-light btn-sm">
+            <i class="bi bi-plus-circle"></i> Add Activity
+        </a>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Activity</th>
+                    <th>Details</th>
+                    <th>Estimated Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in plan.plot.daily_activities.all|slice:":10" %}
+                <tr>
+                    <td>{{ activity.date|date:"d M Y" }}</td>
+                    <td>{{ activity.activity.name }}</td>
+                    <!-- UPDATED TO SHOW NEW FIELDS -->
+                    <td>{{ activity.quantity_done }} {{ activity.unit_of_measure }}</td>
+                    <!-- USE THE CALCULATED PROPERTY -->
+                    <td>${{ activity.total_cost|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No daily activities logged for this plot yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- NEW: Add Step Modal -->
+<div class="modal fade" id="addStepModal" tabindex="-1" aria-labelledby="addStepModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStepModalLabel">Add a New Plan Step</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% for field in add_step_form %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ field.errors.as_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Step</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="col-12">
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Plan Tracking: Steps & Progress</h5>
+            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStepModal">
+                <i class="bi bi-plus-circle"></i> Add Step
+            </button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Activity</th>
+                        <th>Timeline</th>
+                        <th>Status</th>
+                        <th>Budget vs Actual</th>
+                        <th>Variance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in steps_with_status %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.step.activity.name }}</strong>
+                            <small class="d-block text-muted">Duration: {{ item.step.duration_days }} day(s)</small>
+                        </td>
+                        <td>
+                            {{ item.step.get_start_date|date:"d M" }} - {{ item.step.get_end_date|date:"d M" }}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ item.status_color }}">{{ item.status }}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex justify-content-between">
+                                <span>${{ item.actual_cost|floatformat:2 }}</span>
+                                <small>${{ item.step.budgeted_cost|floatformat:2 }}</small>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-{{ item.status_color }}" role="progressbar" style="width: {{ item.cost_progress }}%;"></div>
+                            </div>
+                        </td>
+                        <td class="{% if item.cost_variance < 0 %}text-danger fw-bold{% else %}text-success{% endif %}">
+                            ${{ item.cost_variance|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center">No steps planned yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- NEW: JavaScript to re-open modal on form error -->
+{% if add_step_form.errors %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addStepModal = new bootstrap.Modal(document.getElementById('addStepModal'));
+        addStepModal.show();
+    });
+</script>
+{% endif %}
+{% endblock %}

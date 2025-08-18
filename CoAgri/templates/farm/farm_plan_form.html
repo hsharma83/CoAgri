@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Farm Plan{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h2 class="mb-0">Create New Farm Plan</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <h4>Plan Details</h4>
+            <div class="row">
+                <div class="col-md-4 mb-3">{{ form.plot.label_tag }} {{ form.plot }}</div>
+                <div class="col-md-4 mb-3">{{ form.crop.label_tag }} {{ form.crop }}</div>
+                <div class="col-md-4 mb-3">{{ form.date_of_start.label_tag }} {{ form.date_of_start }}</div>
+            </div>
+            
+            <hr>
+
+            <h4>Plan Steps</h4>
+            {{ steps.management_form }}
+            <div id="step-forms-container">
+                {% for form in steps %}
+                <div class="row step-form mb-3 align-items-center border p-2 rounded">
+                    <div class="col-md-3">{{ form.activity }}</div>
+                    <div class="col-md-2"><label>Start Day Offset</label>{{ form.start_day_offset }}</div>
+                    <div class="col-md-2"><label>Duration (days)</label>{{ form.duration_days }}</div>
+                    <div class="col-md-3"><label>Budget per Acre (₹)</label>{{ form.budgeted_cost_per_acre }}</div>
+                    <div class="col-md-2">
+                        {% if form.instance.pk %}
+                            {{ form.DELETE.label_tag }} {{ form.DELETE }}
+                        {% endif %}
+                    </div>
+                    <div style="display:none;">{{ form.id }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- This is an empty form template for our JS -->
+            <div id="empty-form" class="row step-form mb-3 align-items-center border p-2 rounded" style="display: none;">
+                <div class="col-md-3">{{ steps.empty_form.activity }}</div>
+                <div class="col-md-2"><label>Start Day Offset</label>{{ steps.empty_form.start_day_offset }}</div>
+                <div class="col-md-2"><label>Duration (days)</label>{{ steps.empty_form.duration_days }}</div>
+                <div class="col-md-3"><label>Budget per Acre (₹)</label>{{ steps.empty_form.budgeted_cost_per_acre }}</div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-danger remove-step-btn">Remove</button>
+                </div>
+                <div style="display:none;">{{ steps.empty_form.id }}</div>
+            </div>
+            
+            <button type="button" id="add-step-btn" class="btn btn-secondary mt-2">
+                <i class="bi bi-plus-circle"></i> Add Another Step
+            </button>
+
+            <hr>
+            <button type="submit" class="btn btn-primary btn-lg">Save Plan</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addStepBtn = document.getElementById('add-step-btn');
+    const container = document.getElementById('step-forms-container');
+    const emptyForm = document.getElementById('empty-form').cloneNode(true);
+    const totalForms = document.getElementById('id_steps-TOTAL_FORMS');
+    
+    emptyForm.removeAttribute('id');
+    
+    addStepBtn.addEventListener('click', function() {
+        let formCount = parseInt(totalForms.value);
+        let newForm = emptyForm.cloneNode(true);
+        
+        // Update form prefixes
+        let formRegex = /__prefix__/g;
+        newForm.innerHTML = newForm.innerHTML.replace(formRegex, formCount);
+        newForm.style.display = 'flex'; // Make it visible
+        
+        container.appendChild(newForm);
+        totalForms.value = formCount + 1;
+        
+        // Add remove functionality to the new button
+        newForm.querySelector('.remove-step-btn').addEventListener('click', function() {
+            newForm.remove();
+            // Note: We don't decrement TOTAL_FORMS to avoid issues with form indexing on the backend.
+            // Django's formset handles missing forms correctly.
+        });
+    });
+
+    // Add remove functionality for initially rendered forms (if needed)
+    container.querySelectorAll('.remove-step-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            button.closest('.step-form').remove();
+        });
+    });
+});
+</script>
+{% endblock %}

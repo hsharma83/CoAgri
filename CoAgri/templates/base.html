@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#198754">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="FarmFlow">
+    <title>{% block title %}Farm Management{% endblock %}</title>
+    <link rel="manifest" href="/static/pwa/manifest.json">
+    <link rel="apple-touch-icon" href="/static/pwa/icon-192.png">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        /* Mobile-friendly improvements */
+        @media (max-width: 768px) {
+            .container { padding: 0.5rem; }
+            .card { margin-bottom: 1rem; }
+            .btn { min-height: 44px; }
+            .form-control, .form-select { min-height: 44px; }
+            .navbar-brand { font-size: 1.1rem; }
+            .card-title { font-size: 1.1rem; }
+            .table-responsive { font-size: 0.9rem; }
+        }
+        .btn-group .btn { flex: 1; }
+        .activity-form { background: #f8f9fa; }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'farm:farmland_list' %}">FarmFlow</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'farm:farmland_list' %}">Farmlands</a>
+                    </li>
+                    {% if user.is_superuser or not user.staff or user.staff.role.name != 'FARM_MANAGER' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'farm:plan_list' %}">Farm Plans</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'farm:activity_add' %}">Log Daily Activity</a>
+                    </li>
+                    {% if user.is_superuser or not user.staff or user.staff.role.name != 'FARM_MANAGER' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                Add Items
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'farm:item_add' %}">Add Item</a></li>
+                                {% if user.is_superuser or user.staff.role.name == 'OPERATION_DIRECTOR' or user.staff.role.name == 'ADMIN' %}
+                                    <li><a class="dropdown-item" href="{% url 'farm:crop_add' %}">Add Crop</a></li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+                {% if user.is_authenticated %}
+                    <div class="navbar-nav d-flex align-items-center">
+                        <span class="navbar-text me-3">Welcome, {{ user.username }}!</span>
+                        <form method="post" action="{% url 'logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link nav-link border-0 p-0">Logout</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/pwa/sw.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(registrationError => console.log('SW registration failed'));
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ farmland.name }} - Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ farmland.name }}</h1>
+    <div class="btn-group">
+        <a href="{% url 'farm:farm_finances' farmland.pk %}" class="btn btn-success">View Finances</a>
+        <a href="{% url 'farm:stock_register' farmland.pk %}" class="btn btn-info">Stock Register</a>
+        <a href="{% url 'farm:farmland_list' %}" class="btn btn-secondary">Back to List</a>
+    </div>
+</div>
+
+<!-- Farm Information -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Farm Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Zone:</strong> {{ farmland.parent_zone }}</p>
+                <p><strong>Total Size:</strong> {{ farmland.size }} acres</p>
+                <p><strong>Location:</strong> {{ farmland.location }}</p>
+                {% if farmland.infrastructure %}
+                    <p><strong>Infrastructure:</strong> {{ farmland.infrastructure }}</p>
+                {% endif %}
+                {% if farmland.latitude and farmland.longitude %}
+                    <p><strong>Coordinates:</strong> {{ farmland.latitude }}, {{ farmland.longitude }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Plot Summary</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Plots:</strong> {{ plots.count }}</p>
+                <p><strong>Total Plot Area:</strong> {{ total_plot_area|floatformat:2 }} acres</p>
+                <p><strong>Available Space:</strong> {{ available_space|floatformat:2 }} acres</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Plots List -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Plots in {{ farmland.name }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Plot ID</th>
+                        <th>Size (acres)</th>
+                        <th>Sowing Date</th>
+                        <th>Active Plans</th>
+                        <th>Today's Activity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for plot in plots %}
+                    <tr>
+                        <td><strong>{{ plot.plot_id }}</strong></td>
+                        <td>{{ plot.size }} acres</td>
+                        <td>
+                            {% if plot.sowing_date %}
+                                {{ plot.sowing_date|date:"d M Y" }}
+                            {% else %}
+                                <span class="text-warning">Not sown</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% with active_plans=plot.farm_plans.all %}
+                                {% if active_plans %}
+                                    {% for plan in active_plans %}
+                                        <span class="badge bg-{% if plan.is_active %}success{% else %}secondary{% endif %}">
+                                            {{ plan.crop.name }}
+                                        </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">No active plans</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% if plot.today_activity %}
+                                <span class="badge bg-info">{{ plot.today_activity }}</span>
+                            {% else %}
+                                <span class="text-muted">No activity</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% with active_plan=plot.farm_plans.first %}
+                                {% if active_plan %}
+                                    <a href="{% url 'farm:plan_detail' active_plan.pk %}" class="btn btn-sm btn-primary">View Plan</a>
+                                {% else %}
+                                    <a href="{% url 'farm:plan_create' %}?plot={{ plot.pk }}" class="btn btn-sm btn-success">Create Plan</a>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No plots found in this farmland.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

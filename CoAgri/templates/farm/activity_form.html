@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Log Daily Activities{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h2 class="mb-0">Log Daily Activities</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="activity_date" class="form-label"><b>Date for all activities:</b></label>
+                    <input type="date" name="activity_date" id="activity_date" class="form-control" required value="{{ request.POST.activity_date | default_if_none:'' }}">
+                </div>
+            </div>
+
+            <div id="activity-forms-container">
+                {% for form in formset %}
+                <div class="activity-form border rounded p-3 mb-3">
+                    <div style="display:none;">{{ form.id }}</div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">{{ form.plot.label_tag }}{{ form.plot }}</div>
+                        <div class="col-12 col-md-4">{{ form.activity.label_tag }}{{ form.activity }}</div>
+                        <div class="col-12 col-md-4">{{ form.parent_plan_step.label_tag }}{{ form.parent_plan_step }}</div>
+                        <div class="col-6 col-md-3">{{ form.quantity_done.label_tag }}{{ form.quantity_done }}</div>
+                        <div class="col-6 col-md-3">{{ form.unit_of_measure.label_tag }}{{ form.unit_of_measure }}</div>
+                        
+                        <!-- Machine Usage Section -->
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header py-2"><small><strong>Machine Usage</strong></small></div>
+                                <div class="card-body py-2">
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-3">{{ form.machine_used.label_tag }}{{ form.machine_used }}</div>
+                                        <div class="col-6 col-md-3">{{ form.machine_cost_per_unit.label_tag }}{{ form.machine_cost_per_unit }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Input Usage Section -->
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header py-2"><small><strong>Input Usage</strong></small></div>
+                                <div class="card-body py-2">
+                                    <div class="row g-2">
+                                        <div class="col-4 col-md-3">{{ form.input_used.label_tag }}{{ form.input_used }}</div>
+                                        <div class="col-8 col-md-4">{{ form.input_item.label_tag }}{{ form.input_item }}</div>
+                                        <div class="col-12 col-md-3">{{ form.input_quantity.label_tag }}{{ form.input_quantity }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Labor Usage Section -->
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header py-2"><small><strong>Labor Usage</strong></small></div>
+                                <div class="card-body py-2">
+                                    <div class="row g-2">
+                                        <div class="col-6 col-md-3">{{ form.labor_count.label_tag }}{{ form.labor_count }}</div>
+                                        <div class="col-6 col-md-3">{{ form.labor_cost_per_person.label_tag }}{{ form.labor_cost_per_person }}</div>
+                                        <div class="col-12 col-md-6">{{ form.labor_names.label_tag }}{{ form.labor_names }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-md-4">{{ form.vendor_name.label_tag }}{{ form.vendor_name }}</div>
+                        <div class="col-12 col-md-4">{{ form.time_taken.label_tag }}{{ form.time_taken }}</div>
+                        <div class="col-12">{{ form.notes.label_tag }}{{ form.notes }}</div>
+                         {% if form.instance.pk %}
+                            <div class="col-12">{{ form.DELETE.label_tag }} {{ form.DELETE }}</div>
+                         {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Empty form template for JS -->
+            <div id="empty-form" style="display: none;">
+                <div class="activity-form border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">{{ formset.empty_form.plot.label_tag }}{{ formset.empty_form.plot }}</div>
+                        <div class="col-md-4 mb-3">{{ formset.empty_form.activity.label_tag }}{{ formset.empty_form.activity }}</div>
+                        <div class="col-md-4 mb-3">{{ formset.empty_form.parent_plan_step.label_tag }}{{ formset.empty_form.parent_plan_step }}</div>
+                        <div class="col-md-3 mb-3">{{ formset.empty_form.quantity_done.label_tag }}{{ formset.empty_form.quantity_done }}</div>
+                        <div class="col-md-3 mb-3">{{ formset.empty_form.unit_of_measure.label_tag }}{{ formset.empty_form.unit_of_measure }}</div>
+                        
+                        <!-- Machine Usage Section -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card">
+                                <div class="card-header"><strong>Machine Usage</strong></div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">{{ formset.empty_form.machine_used.label_tag }}{{ formset.empty_form.machine_used }}</div>
+                                        <div class="col-md-3">{{ formset.empty_form.machine_cost_per_unit.label_tag }}{{ formset.empty_form.machine_cost_per_unit }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Input Usage Section -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card">
+                                <div class="card-header"><strong>Input Usage</strong></div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">{{ formset.empty_form.input_used.label_tag }}{{ formset.empty_form.input_used }}</div>
+                                        <div class="col-md-4">{{ formset.empty_form.input_item.label_tag }}{{ formset.empty_form.input_item }}</div>
+                                        <div class="col-md-3">{{ formset.empty_form.input_quantity.label_tag }}{{ formset.empty_form.input_quantity }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Labor Usage Section -->
+                        <div class="col-md-12 mb-3">
+                            <div class="card">
+                                <div class="card-header"><strong>Labor Usage</strong></div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">{{ formset.empty_form.labor_count.label_tag }}{{ formset.empty_form.labor_count }}</div>
+                                        <div class="col-md-3">{{ formset.empty_form.labor_cost_per_person.label_tag }}{{ formset.empty_form.labor_cost_per_person }}</div>
+                                        <div class="col-md-6">{{ formset.empty_form.labor_names.label_tag }}{{ formset.empty_form.labor_names }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">{{ formset.empty_form.vendor_name.label_tag }}{{ formset.empty_form.vendor_name }}</div>
+                        <div class="col-md-4 mb-3">{{ formset.empty_form.time_taken.label_tag }}{{ formset.empty_form.time_taken }}</div>
+                        <div class="col-md-6 mb-3">{{ formset.empty_form.notes.label_tag }}{{ formset.empty_form.notes }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                <button type="button" id="add-activity-btn" class="btn btn-outline-secondary btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add Another Activity
+                </button>
+                <button type="submit" class="btn btn-primary btn-lg" onclick="return validatePlanSteps()">Save Activities</button>
+            </div>
+            
+            {% if formset.errors %}
+                <div class="alert alert-danger mt-3">
+                    <h5>Please correct the following errors:</h5>
+                    {% for form in formset %}
+                        {% if form.errors %}
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endfor %}
+                    {% if formset.non_form_errors %}
+                        <ul>
+                            {% for error in formset.non_form_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addBtn = document.getElementById('add-activity-btn');
+    const container = document.getElementById('activity-forms-container');
+    const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
+    
+    addBtn.addEventListener('click', () => {
+        const formRegex = /form-__prefix__/g;
+        let formCount = parseInt(totalFormsInput.value);
+        
+        // Clone the empty form template
+        let emptyFormHtml = document.getElementById('empty-form').innerHTML;
+        let newFormHtml = emptyFormHtml.replace(formRegex, `form-${formCount}`);
+        
+        const newFormDiv = document.createElement('div');
+        newFormDiv.innerHTML = newFormHtml;
+        container.appendChild(newFormDiv);
+        
+        totalFormsInput.value = formCount + 1;
+    });
+    
+    // Add event listener for plot changes to update plan steps
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('plot-selector')) {
+            const plotId = e.target.value;
+            const formRow = e.target.closest('.activity-form');
+            const planStepSelect = formRow.querySelector('select[name$="parent_plan_step"]');
+            
+            // Clear and disable plan step select while loading
+            planStepSelect.innerHTML = '<option value="">Loading...</option>';
+            planStepSelect.disabled = true;
+            
+            if (plotId) {
+                fetch(`/get-plan-steps/${plotId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        planStepSelect.innerHTML = '<option value="">Select Plan Step (Optional)</option>';
+                        if (data.length === 0) {
+                            planStepSelect.innerHTML += '<option value="" disabled>No plan steps available</option>';
+                        } else {
+                            data.forEach(step => {
+                                const option = document.createElement('option');
+                                option.value = step.id;
+                                option.textContent = step.name;
+                                planStepSelect.appendChild(option);
+                            });
+                        }
+                        planStepSelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        planStepSelect.innerHTML = '<option value="">Error loading steps</option>';
+                        planStepSelect.disabled = false;
+                    });
+            } else {
+                planStepSelect.innerHTML = '<option value="">Select Plot First</option>';
+                planStepSelect.disabled = true;
+            }
+        }
+    });
+    
+    // Initialize plan step selects on page load
+    document.querySelectorAll('.plot-selector').forEach(plotSelect => {
+        const formRow = plotSelect.closest('.activity-form');
+        const planStepSelect = formRow.querySelector('select[name$="parent_plan_step"]');
+        
+        if (!plotSelect.value) {
+            planStepSelect.innerHTML = '<option value="">Select Plot First</option>';
+            planStepSelect.disabled = true;
+        }
+    });
+});
+
+function validatePlanSteps() {
+    let hasEmptyPlanStep = false;
+    let plotWithoutPlan = null;
+    
+    document.querySelectorAll('.activity-form').forEach(form => {
+        const plotSelect = form.querySelector('select[name$="plot"]');
+        const planStepSelect = form.querySelector('select[name$="parent_plan_step"]');
+        const activitySelect = form.querySelector('select[name$="activity"]');
+        
+        // Only validate if form has data
+        if (plotSelect && plotSelect.value && activitySelect && activitySelect.value) {
+            if (!planStepSelect || !planStepSelect.value) {
+                hasEmptyPlanStep = true;
+                plotWithoutPlan = plotSelect.options[plotSelect.selectedIndex].text;
+            }
+        }
+    });
+    
+    if (hasEmptyPlanStep) {
+        if (confirm(`No plan step selected for ${plotWithoutPlan}. Activities without plan steps won't be linked to budget tracking. Continue anyway?`)) {
+            return true;
+        }
+        return false;
+    }
+    
+    return true;
+}
+</script>
+{% endblock %}

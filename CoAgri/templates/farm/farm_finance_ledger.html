@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Finance Ledger - {{ farm.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Finance Ledger - {{ farm.name }}</h1>
+    <div class="btn-group">
+        <a href="{% url 'farm:expense_add' farm.pk %}" class="btn btn-danger">Add Expense</a>
+        <a href="{% url 'farm:cashin_add' farm.pk %}" class="btn btn-success">Add Cash In</a>
+        <a href="{% url 'farm:sale_add' farm.pk %}" class="btn btn-primary">Add Sale</a>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+            </div>
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+            </div>
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-outline-primary">Filter</button>
+                <a href="{% url 'farm:finance_export' farm.pk %}?start_date={{ start_date }}&end_date={{ end_date }}" class="btn btn-success">
+                    <i class="bi bi-file-earmark-excel"></i> Export Excel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Total Inflow</h5>
+                <h3>₹{{ total_inflow|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Total Outflow</h5>
+                <h3>₹{{ total_outflow|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white {% if net_balance >= 0 %}bg-success{% else %}bg-warning{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Net Balance</h5>
+                <h3>₹{{ net_balance|floatformat:2 }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions by Category -->
+{% for category_name, category_data in categories.items %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ category_name }}</h5>
+        <div>
+            <span class="badge 
+                {% if category_data.type == 'Expense' or category_data.type == 'Activity Expense' %}bg-danger
+                {% elif category_data.type == 'Cash In' %}bg-success
+                {% else %}bg-primary{% endif %}">
+                {{ category_data.type }}
+            </span>
+            <span class="badge bg-secondary ms-2">₹{{ category_data.total_amount|floatformat:2 }}</span>
+            {% if category_data.total_units > 0 %}
+                <span class="badge bg-info ms-1">{{ category_data.total_units|floatformat:2 }} units</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th class="text-end">Units</th>
+                        <th class="text-end">Cost/Unit</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in category_data.transactions %}
+                    <tr>
+                        <td>{{ transaction.date|date:"d M Y" }}</td>
+                        <td>{{ transaction.description }}</td>
+                        <td class="text-end">
+                            {% if transaction.units %}
+                                {{ transaction.units|floatformat:2 }} {{ transaction.unit_measure }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if transaction.cost_per_unit %}
+                                ₹{{ transaction.cost_per_unit|floatformat:2 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <span class="{% if category_data.type == 'Expense' or category_data.type == 'Activity Expense' %}text-danger{% else %}text-success{% endif %}">
+                                ₹{{ transaction.amount|floatformat:2 }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="card">
+    <div class="card-body text-center">
+        <p>No transactions found for the selected period.</p>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
